@@ -13,7 +13,7 @@ interface Props{
     icon?:string;
     onButtonClick?:()=>void;
 
-    message?:'eye-light-off-icon'|'eye-light-on-icon'|'expand-right-light-icon';
+    message?:string;
 
     onKeyDown?:(event:KeyboardEvent<HTMLInputElement>)=> void;
 }
