@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { SignInRequestDto, SignUpRequestDto } from "./request/auth";
-import { SignInResponseDto } from './reponse/auth';
+import { SignInResponseDto, SignUpResponseDto } from './reponse/auth';
 import { ResponseDto } from './reponse';
 
 const DOMAIN ='http:localhost:8080';
@@ -25,5 +25,15 @@ export const signInRequest=async(requestBody:SignInRequestDto)=>{
 }
 
 export const signUpRequest=async(requestBody:SignUpRequestDto)=>{
-
+    const result=await axios.post(SIGN_UP_URL(),requestBody)
+    .then(response => {
+        const responseBody:SignUpResponseDto = response.data;
+        return responseBody;
+    })
+    .catch(error =>{
+        if(!error.response.data) return null;
+        const responseBody:ResponseDto=error.reponse.data;
+        return responseBody;
+    });
+    return result;
 }

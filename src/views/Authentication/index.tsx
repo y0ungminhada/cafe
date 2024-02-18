@@ -1,9 +1,9 @@
 import React, { useState , KeyboardEvent, useRef, ChangeEvent} from 'react';
 import './style.css';
 import InputBox from 'components/InputBox';
-import { SignInRequestDto } from 'apis/request/auth';
-import { signInRequest } from 'apis';
-import { SignInResponseDto } from 'apis/reponse/auth';
+import { SignInRequestDto, SignUpRequestDto } from 'apis/request/auth';
+import { signInRequest, signUpRequest } from 'apis';
+import { SignInResponseDto, SignUpResponseDto } from 'apis/reponse/auth';
 import { ResponseDto } from 'apis/reponse';
 import {useCookies} from 'react-cookie';
 import { MAIN_PATH } from 'constant';
@@ -155,6 +155,29 @@ const SignUpCard=()=>{
 
     const[passwordButtonIcon,setPasswordButtonIcon]=useState<'eye-light-off-icon'|'eye-light-on-icon'>('eye-light-off-icon')
     const[passwordCheckButtonIcon,setPasswordCheckButtonIcon]=useState<'eye-light-off-icon'|'eye-light-on-icon'>('eye-light-off-icon')
+    
+    //function
+    const signUpResponse = (responseBody : SignUpResponseDto | ResponseDto | null)=>{
+        if(!responseBody) {
+            alert('네트워크 이상입니다.');
+            return;
+        }
+        const {code} = responseBody;
+        if(code == 'DE'){
+            setEmailError(true);
+            setEmailErrorMessage('회원가입 실패(이메일 중복)');
+        }
+        if(code == 'DN'){
+            setNicknameError(true);
+            setNicknameErrorMessage('회원가입 실패(닉네임 중복)');
+        }
+        if(code==='VF') alert('모든 값을 입력하세요.');
+        if(code==='DBE') alert('데이터베이스 오류입니다.');
+        if(code!=='SU') return;
+
+        setView('sign-in');
+
+    }
     //event handler//
     //change evnet
     const onEmailChangeHandler=(event:ChangeEvent<HTMLInputElement>)=>{
@@ -199,7 +222,7 @@ const SignUpCard=()=>{
         }
     }
     const onPasswordCheckButtonClickHandler=()=>{
-        if(passwordButtonIcon==='eye-light-off-icon'){
+        if(passwordCheckButtonIcon==='eye-light-off-icon'){
             setPasswordCheckButtonIcon('eye-light-on-icon');
             setPasswordCheckType('text');
         }
@@ -235,7 +258,43 @@ const SignUpCard=()=>{
     }
     //회원가입 버튼 클릭 이벤트 처리
     const onSignUpButtonClickHandler=()=>{
-        alert('회원가입 버튼 클릭')
+        const emailPattern = /^[a-zA-Z0-9]*@([-.]?[a-zA-Z0-9])*\.[a-zA-Z]{2,4}$/
+        const isEmailPattern=emailPattern.test(email);
+        if(!isEmailPattern){
+            setEmailError(true);
+            setEmailErrorMessage('이메일 주소 포멧이 맞지 않습니다.')
+        }
+        const isCheckedPassword=password.trim().length>=8;
+        if (!isCheckedPassword){
+            setPasswordError(true);
+            setPasswordErrorMessage('비밀번호는 8자 이상 입력해주세요');
+        }
+        const isEqualPassword=password===passwordCheck;
+        if(!isEqualPassword){
+            setPasswordCheckError(true);
+            setPasswordCheckErrorMessage('비밀번호가 일치하지 않습니다');
+        }
+        if(!isEmailPattern||!isCheckedPassword||!isEqualPassword) {
+            setPage(1);
+            return;
+        }
+        const hasName = name.length !==0;
+        if(!hasName){
+            setNicknameError(true);
+            setNicknameErrorMessage('이름을 입력해주세요');
+        }
+        const hasNickname = nickname.length !==0;
+        if(!hasNickname){
+            setNicknameError(true);
+            setNicknameErrorMessage('닉네임을 입력해주세요');
+        }
+        if(!agreedPersonal) setAgreedPersonal(true);
+        if(!hasName || !hasNickname || agreedPersonal) return;
+
+        const requestBody:SignUpRequestDto ={
+            email, password, name, nickname, agreedPersonal
+        };
+        signUpRequest(requestBody).then(signUpResponse);
     }
     //키 다운 이벤트 처리
     const onEmailKeyDownHandler=(event:KeyboardEvent<HTMLInputElement>)=>{
