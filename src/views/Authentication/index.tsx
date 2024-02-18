@@ -119,7 +119,7 @@ const SignInCard=()=>{
     );
 };
 
-//componet : sign up card 컴포넌트//
+//componet : sign up card 컴포넌트/////
 const SignUpCard=()=>{
     //render : sign in card 컴포넌트 랜더링//
     const emailRef=useRef<HTMLInputElement|null>(null);
