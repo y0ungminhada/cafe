@@ -3,7 +3,7 @@ import { SignInRequestDto, SignUpRequestDto } from "./request/auth";
 import { SignInResponseDto, SignUpResponseDto } from './reponse/auth';
 import { ResponseDto } from './reponse';
 
-const DOMAIN ='http:localhost:8080';
+const DOMAIN ='https://api.dailydevcafe.com';
 
 const API_DOMAIN=`${DOMAIN}/api.v1`;
 
