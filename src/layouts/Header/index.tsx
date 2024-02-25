@@ -1,9 +1,35 @@
 import React, { ChangeEvent, useRef, useState, KeyboardEvent, useEffect } from 'react'
 import './style.css';
-import { useNavigate, useParams } from 'react-router-dom';
-import { MAIN_PATH, SEARCH_PATH } from 'constant';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { AUTH_PATH,BOARD_PATH, BOARD_DETAIL_PATH, BOARD_UPDATE_PATH, BOARD_WRITE_PATH, MAIN_PATH, SEARCH_PATH, USER_PATH } from 'constant';
+import { useCookies } from 'react-cookie';
+import { useBoardstore, useLoginUserStore } from 'stores';
+import BoardDetail from 'views/Board/Detail';
 
 export default function Header() {
+  //로그인 유저 상태
+  const {loginUser,setLoginUser,resetLoginUser}=useLoginUserStore();
+  //path 상태//
+  const {pathname}=useLocation();
+  //cookie 상태//
+  const [cookies,setCookie]=useCookies();
+  //로그인 상태//
+  const[isLogin,setLogin]=useState<boolean>(false);
+  //인증페이지 상태//
+  const[isAuthPage,setAuthPage]=useState<boolean>(false);
+  //메인페이지 상태
+  const[isMainPage,setMainPage]=useState<boolean>(false);
+  //검색페이지 상태
+  const[isSearchPage,setSearchPage]=useState<boolean>(false);
+  //세기물 상세페이지 상태
+  const[isBoardDetailPage,setBoardDetailPage]=useState<boolean>(false);
+  //게시물 작성페이지 상태
+  const[isBoardWritePage,setBoardWritePage]=useState<boolean>(false);
+  //게시물 수정페이지 상태
+  const[isBoardUpdatePage,setBoardUpdatePage]=useState<boolean>(false);
+  //유저페이지 상태
+  const[isUserPage,setUserPage]=useState<boolean>(false);
+
 
   //function 네비게이트 함수//
   const navigate= useNavigate();
@@ -72,6 +98,71 @@ export default function Header() {
       </div>
     );
   }
+//마이페이지 버튼 컴포턴트//
+  const MyPageButton=()=>{
+
+    //유저 이메일 path variable 상태//
+    const{userEmail}=useParams();
+
+    //event handler 마이페이지 버튼 클릭//
+    const onMyPageButtonClickHandler=()=>{
+      if(!loginUser) return ;
+      const {email}=loginUser
+      navigate(USER_PATH(email));
+    };
+
+    const onSignOutButtonClickHandler=()=>{
+      resetLoginUser();
+      navigate(MAIN_PATH());
+     };
+
+    //event handler 로그인 버튼 클릭//
+    const onSignInButtonClickHandler=()=>{
+      navigate(AUTH_PATH());
+    };
+    
+    if(isLogin && userEmail===loginUser?.email)
+    return <div className='white-button' onClick={onSignOutButtonClickHandler}>{'로그아웃'}</div>;
+    
+    if(isLogin)
+    return <div className='white-button' onClick={onMyPageButtonClickHandler}>{'마이페이지'}</div>;
+
+
+    return <div className='black-button' onClick={onSignInButtonClickHandler}>{'로그인'}</div>;
+    
+  };
+  //업로드 버튼 컴포넌트//
+  const UploadButton=()=>{
+
+    //게시물 상태//
+    const { title, content, boardImageFileList, resetBoard} = useBoardstore();
+
+    //event handler 업로드 이벤트 클릭//
+    const onUploadButtonClickHandler=()=>{
+
+    }
+    if(title && content)
+    return <div className='black-button' onClick={onUploadButtonClickHandler}>{'업로드'}</div>;
+
+    return <div className='disable-button' >{'업로드'}</div>;
+  };
+  //effect path 변경될 때마다 실행될 함수//
+  useEffect(()=>{
+    const isAuthPage=pathname.startsWith(AUTH_PATH());
+    setAuthPage(isAuthPage);
+    const isMainPage = pathname === MAIN_PATH();
+    setMainPage(isMainPage);
+    const isSearchPage=pathname.startsWith(SEARCH_PATH(''));
+    setSearchPage(isSearchPage);
+    const isBoardDetailPage=pathname.startsWith(BOARD_PATH() + '/'+ BOARD_DETAIL_PATH(''));
+    setBoardDetailPage(isBoardDetailPage);
+    const isBoardWritePage=pathname.startsWith(BOARD_PATH() + '/'+ BOARD_WRITE_PATH());
+    setBoardWritePage(isBoardWritePage);
+    const isBoardUpdatePage=pathname.startsWith(BOARD_PATH() + '/'+ BOARD_UPDATE_PATH(''));
+    setBoardUpdatePage(isBoardUpdatePage);
+    const isUserPage=pathname.startsWith(USER_PATH(''));
+    setUserPage(isUserPage);
+  },[pathname]);
 
   return (
     <div id='header'>
@@ -83,7 +174,9 @@ export default function Header() {
           <div className='header-logo'>{'Daily-Dev Cafe'}</div>
         </div>
         <div className='header-right-box'>
-          <SearchButton />
+          {(isAuthPage||isMainPage||isSearchPage||isBoardDetailPage) && <SearchButton />}
+          {(isMainPage||isSearchPage||isBoardDetailPage||isUserPage)&& <MyPageButton /> }
+          {(isBoardWritePage || isBoardUpdatePage) && <UploadButton /> }
         </div>
       </div>
     </div>
