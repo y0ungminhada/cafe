@@ -113,6 +113,7 @@ export default function Header() {
 
     const onSignOutButtonClickHandler=()=>{
       resetLoginUser();
+      setCookie('accessToken','',{ path:MAIN_PATH(),expires:new Date() });
       navigate(MAIN_PATH());
      };
 
@@ -163,7 +164,10 @@ export default function Header() {
     const isUserPage=pathname.startsWith(USER_PATH(''));
     setUserPage(isUserPage);
   },[pathname]);
-
+  //login user가 변경될 때마다 실행될 함수//
+  useEffect(()=>{
+    setLogin(loginUser!==null);
+  },[loginUser])
   return (
     <div id='header'>
       <div className='header-container'>
