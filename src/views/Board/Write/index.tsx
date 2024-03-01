@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import './style.css';
-import { useBoardstore } from 'stores';
+import { useBoardstore, useLoginUserStore } from 'stores';
+import { useNavigate } from 'react-router-dom';
+import { MAIN_PATH } from 'constant';
+import { useCookies } from 'react-cookie';
 
 export default function BoardWrite() {
 
+  //제목 영역 요소 참조 상태//
+  const titleRef = useRef<HTMLTextAreaElement|null>(null);
   //본문 영역 요소 참조 상태//
   const contentRef = useRef<HTMLTextAreaElement|null>(null);
   //이미지 입력 요소 참조 상태//
@@ -13,11 +18,75 @@ export default function BoardWrite() {
   const { content,setContent }=useBoardstore();
   const { boardImageFileList,setBoardImageFileList }=useBoardstore();
   const { resetBoard }=useBoardstore();
+
+  //cookie 상태//
+  const[cookies,setCookies]=useCookies();
+  //function 네비게이트 함수///
+  const navigate=useNavigate();
   //게시물 이미지 미리보기 URL 상태//
   const [imageUrls,setImageUrls]=useState<string[]>([]);
 
+  //eventhandler 제목 변경 이벤트 처리//
+  const onTitleChangeHandler=(event:ChangeEvent<HTMLTextAreaElement>)=>{
+    const{value}=event.target;
+    setTitle(value);
+
+    if(!titleRef.current) return;
+    titleRef.current.style.height='auto';
+   titleRef.current.style.height=`${titleRef.current.scrollHeight}px`;
+  }
+  //eventhandler 이미지 업로드 버트 클릭 이벤트 처리//
+  const onImageUploadButtonClickHandler=()=>{
+    if(!imageInputRef.current)return;
+    imageInputRef.current.click();
+  }
+  
+  //evnethandler 이미지 변경 이벤트 처리//
+  const onImageChangeHandler=(event:ChangeEvent<HTMLInputElement>)=>{
+    if(!event.target.files||!event.target.files.length)return;
+    const file=event.target.files[0];
+
+    const imageUrl=URL.createObjectURL(file);
+    const newImageUrls=imageUrls.map(item=>item);
+    newImageUrls.push(imageUrl);
+    setImageUrls(newImageUrls);
+
+    const newBoardImageFileList=boardImageFileList.map(item=>item);
+    newBoardImageFileList.push(file);
+    setBoardImageFileList(newBoardImageFileList);
+
+  }
+  //eventhandler 텍스트 변경 이벤트 처리//
+  const onContentChangeHandler=(event:ChangeEvent<HTMLTextAreaElement>)=>{
+    const {value}=event.target;
+    setContent(value);
+
+    if(!contentRef.current) return;
+    contentRef.current.style.height='auto';
+    contentRef.current.style.height=`${contentRef.current.scrollHeight}px`;
+  }
+  //eventhandler 이미지 닫기 버튼 클릭 이벤트//
+  const onImageCloseButtonClickHandler=(deleteIndex:number)=>{
+    if(!imageInputRef.current) return;
+    imageInputRef.current.value='';
+
+    const newImageUrls = imageUrls.filter((url,index)=>index!==deleteIndex);
+    setImageUrls(newImageUrls);
+
+    const newBoardImageFileList=boardImageFileList.filter((file,index)=>index!==deleteIndex);
+    setBoardImageFileList(newBoardImageFileList);
+
+    if(!imageInputRef.current)return;
+    imageInputRef.current.value='';
+  }
+
   //effect 마운트 시 실행될 함수 //
   useEffect(()=>{
+    const accessToken=cookies.accessToken;
+    if(!accessToken) {
+      navigate(MAIN_PATH());
+      return;
+    }
     resetBoard();
   },[]);
 
@@ -26,30 +95,25 @@ export default function BoardWrite() {
       <div className='board-write-container'>
         <div className='board-write-box'>
           <div className='board-write-title-box'>
-            <input className='board-write-title-input' type='text' placeholder='제목을 작성해주세요.' value={title} />
+            <textarea ref={titleRef} className='board-write-title-textarea' rows={1} placeholder='제목을 작성해주세요.' value={title} onChange={onTitleChangeHandler}/>
           </div>
           <div className='devider'></div>
           <div className='board-write-content-box'>
-            <textarea ref={contentRef} className='board-write-content-textarea' placeholder='본문을 작성해주세요.' value={content}/>
-            <div className='icon-button'>
+            <textarea ref={contentRef} className='board-write-content-textarea' placeholder='본문을 작성해주세요.' value={content} onChange={onContentChangeHandler}/>
+            <div className='icon-button' onClick={onImageUploadButtonClickHandler}>
               <div className='icon image-box-light-icon' ></div>
             </div>
-            <input ref={imageInputRef} type='file' accept='image/*' style={{display:'none'}}/>
+            <input ref={imageInputRef} type='file' accept='image/*' style={{display:'none'}} onChange={onImageChangeHandler}/>
           </div>
           <div className='board-write-images-box'>
-            <div className='board-write-image-box'>
-              <img className='board-write-image' src='https://oopy.lazyrockets.com/api/v2/notion/image?src=https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2Ff71cbdcd-b763-41af-9bbb-42abdb18bd6a%2F924f98cd-0a25-4463-90b5-c222313c4437%2F%25E1%2584%258B%25E1%2585%25AE%25E1%2584%2590%25E1%2585%25A6%25E1%2584%258F%25E1%2585%25A9_%25E1%2584%2589%25E1%2585%25A1%25E1%2584%258B%25E1%2585%25B5%25E1%2584%2590%25E1%2585%25B3_%25E1%2584%2592%25E1%2585%25A6%25E1%2584%2583%25E1%2585%25A5_2000x1333.png&blockId=c2dd0879-c2b5-484e-bbe8-5545f70aa320&width=3600'/>
-              <div className='icon-button image-close'>
-                <div className='icon close-icon'></div>
+            {imageUrls.map((imageUrl,index)=>
+              <div className='board-write-image-box'>
+                <img className='board-write-image' src={imageUrl}/>
+                <div className='icon-button image-close' onClick={()=>onImageCloseButtonClickHandler(index)}>
+                  <div className='icon close-icon'></div>
+                </div>
               </div>
-            </div>
-
-            <div className='board-write-image-box'>
-              <img className='board-write-image' src='https://mportal.ajou.ac.kr/file/imageView.do?filePath=/Upload/TIS/ADMIN/BOARD/180904150908_66047992.png'/>
-              <div className='icon-button image-close'>
-                <div className='icon close-icon'></div>
-              </div>
-            </div>
+            )}
 
           </div>
         </div>
