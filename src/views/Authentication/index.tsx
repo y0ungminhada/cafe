@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Authentication(){
 
 //state: 화면 상태//
-const[view,setView]=useState<'sign-in'|'sign-up'>('sign-in');
+const[view,setView]=useState<'signin'|'signup'>('signin');
 
 //쿠키 상태//
 const [cookies, setCookie]=useCookies();
@@ -66,10 +66,10 @@ const SignInCard=()=>{
     const onSignInButtonClickHandler=()=>{
         const requestBody:SignInRequestDto={email,password};
         signInRequest(requestBody).then(signInResponse);
-
     }
+    
     const onSignUpLinkClickHandler=()=>{
-        setView('sign-up');
+        setView('signup');
     }
     const onPasswordButtonClickHandler=()=>{
         if(passwordType==='text'){
@@ -175,7 +175,7 @@ const SignUpCard=()=>{
         if(code==='DBE') alert('데이터베이스 오류입니다.');
         if(code!=='SU') return;
 
-        setView('sign-in');
+        setView('signin');
 
     }
     //event handler//
@@ -289,12 +289,14 @@ const SignUpCard=()=>{
             setNicknameErrorMessage('닉네임을 입력해주세요');
         }
         if(!agreedPersonal) setAgreedPersonal(true);
-        if(!hasName || !hasNickname || agreedPersonal) return;
+        if(!hasName || !hasNickname || !agreedPersonal) return;
 
         const requestBody:SignUpRequestDto ={
             email, password, name, nickname, agreedPersonal
         };
         signUpRequest(requestBody).then(signUpResponse);
+       
+        alert("회원가입 성공")
     }
     //키 다운 이벤트 처리
     const onEmailKeyDownHandler=(event:KeyboardEvent<HTMLInputElement>)=>{
@@ -324,7 +326,7 @@ const SignUpCard=()=>{
     }
     //로그인 링크 클릭 이벤트 
     const onSignInLinkClickHandler=()=>{
-        setView('sign-in');
+        setView('signin');
     }
 
     return(
@@ -387,8 +389,8 @@ const SignUpCard=()=>{
                         </div>
                     </div>
                 </div>
-                {view==='sign-in'&&<SignInCard/>}
-                {view==='sign-up'&&<SignUpCard/>}
+                {view==='signin'&&<SignInCard/>}
+                {view==='signup'&&<SignUpCard/>}
             </div>
         </div>
     )

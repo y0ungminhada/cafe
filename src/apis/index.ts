@@ -9,13 +9,13 @@ import { error } from 'console';
 
 const DOMAIN ='https://api.dailydevcafe.com';
 
-const API_DOMAIN=`${DOMAIN}/api.v1`;
+const API_DOMAIN=`${DOMAIN}`;
 const authorization = (accessToken : string)=>{
     return { headers:{Authorization:`Bearer ${accessToken}`}}
 }
 
-const SIGN_IN_URL=()=>`${API_DOMAIN}/auth/sign-in`;
-const SIGN_UP_URL=()=>`${API_DOMAIN}/auth/sign-up`;
+const SIGN_IN_URL=()=>`${DOMAIN}/auth/signin`;
+const SIGN_UP_URL=()=>`${DOMAIN}/auth/signup`;
 
 export const signInRequest=async(requestBody:SignInRequestDto)=>{
     const result=await axios.post(SIGN_IN_URL(),requestBody)
